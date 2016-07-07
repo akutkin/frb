@@ -20,18 +20,18 @@ $ pip2 install scipy astropy scikit-learn scikit-image matplotlib h5py sqlalchem
 
 ## Finding injected pulses in one file
 
-- download sample data
+- Download sample data
 ```
 $ cd examples
 $ wget https://www.dropbox.com/s/ag7rz88kjnblqzv/data.tgz
 $ tar -xvzf data.tgz
 ```
-- run  script
+- Run  script
 ```
 $ python2 caching.py
 ```
 
-- deactivate virtual environment
+- Deactivate virtual environment
 ```
 $ deactivate
 ```
@@ -70,7 +70,7 @@ Script processes experiment (``raks12ec``, C-band, Noto & Yebes radiotelescopes)
 There's no need to install any packages except ``docker`` itself
 
 - Install ``docker`` package on your machine
-- Run container with image. It will take some time to download image with preinstalled software.
+- Run container with image and mount it to some directory ``host_dir`` on your host machine. It will take some time to download image with preinstalled OS & software.
 ```
 $ docker run -it -v host_dir:/home/frb-dev/data ipashchenko/frb /bin/bash
 ```
@@ -86,7 +86,9 @@ $ docker run -it -v host_dir:/home/frb-dev/data ipashchenko/frb /bin/bash
 # cp *.png ../data/.
 # cp ../frb/frb.db ../data/.
 ```
-- Results can be viewed in host ``host_dir``
+- Results can be viewed in directory ``host_dir`` on your host machine.
 
 ## TODOs
-Currently, ``my5spec`` fails to read raw data with some format (see issue [#7](https://github.com/akutkin/frb/issues/7)) and fails to read ends of files (see issue [#13](https://github.com/akutkin/frb/issues/13))
+
+- Currently, ``my5spec`` fails to read raw data with some format (see issue [#7](https://github.com/akutkin/frb/issues/7)) and fails to read ends of files (see issue [#13](https://github.com/akutkin/frb/issues/13)).
+- Install ``docker`` on frb machine
