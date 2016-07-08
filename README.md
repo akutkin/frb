@@ -91,4 +91,3 @@ $ docker run -it -v host_dir:/home/frb-dev/data ipashchenko/frb /bin/bash
 ## TODOs
 
 - Currently, ``my5spec`` fails to read raw data with some format (see issue [#7](https://github.com/akutkin/frb/issues/7)) and fails to read ends of files (see issue [#13](https://github.com/akutkin/frb/issues/13)).
-- Install ``docker`` on frb machine
