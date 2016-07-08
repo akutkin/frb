@@ -83,42 +83,27 @@ def find_clusters_ell_amplitudes(amplitudes, min_samples=10, leaf_size=5,
     data_ = data.reshape((data.size, 1))
     ldata_ = ldata.reshape((ldata.size, 1))
 
-    # First fit GMM to log of data. If one cluster is found - use DBSCAN
-    # algorithm to find outliers (possible FRBs). If more then one cluster is
-    # found - then chose the one with highest weight and treat all clusters with
-    # higher amplitude as signals.
-    results = dict()
-    for i in range(1, 5):
-        classif = GMM(n_components=i)
-        classif.fit(ldata_)
-        results.update({classif.bic(ldata_): [i, classif]})
-    min_bic = min(results.keys())
-    i, clf = results[min_bic]
+    data_range = np.max(data) - np.min(data)
+    if eps is None:
+        eps = data_range / np.sqrt(len(amplitudes))
+    db = DBSCAN(eps=eps, min_samples=min_samples,
+                leaf_size=leaf_size).fit(data_)
+    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+    core_samples_mask[db.core_sample_indices_] = True
+    labels = db.labels_
+    # Number of clusters in labels, ignoring noise if present.
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    unique, unique_counts = np.unique(labels, return_counts=True)
+    largest_cluster_data = data[labels == unique[np.argmax(unique_counts)]]
+    outliers = data[labels == -1]
+    params = rayleigh.fit(largest_cluster_data)
+    distr = rayleigh(loc=params[0], scale=params[1])
+    threshold = distr.ppf(0.99)
 
-    # If one cluster is favoured
-    if i == 1:
-        data_range = np.max(data) - np.min(data)
-        if eps is None:
-            eps = data_range / len(amplitudes)
-        db = DBSCAN(eps=eps, min_samples=min_samples,
-                    leaf_size=leaf_size).fit(data_)
-        core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-        core_samples_mask[db.core_sample_indices_] = True
-        labels = db.labels_
-        # Number of clusters in labels, ignoring noise if present.
-        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-        unique, unique_counts = np.unique(labels, return_counts=True)
-        largest_cluster_data = data[labels == unique[np.argmax(unique_counts)]]
-        params = rayleigh.fit(largest_cluster_data)
-        distr = rayleigh(loc=params[0], scale=params[1])
-        threshold = distr.ppf(0.99)
-
-    else:
-        # Find cluster with highest weight
-        i_max = np.argmax(clf.weights_)
-        y = clf.predict(ldata_)
-        threshold = np.max(data[y == i_max])
-    return threshold
+    # Need data > threshold to ensure that low power outliers haven't been
+    # included
+    indx = np.logical_and(labels == -1, data > threshold)
+    return min(data[indx]) - eps
 
 
 def find_robust_gaussian_params(data):
