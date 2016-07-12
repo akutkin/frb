@@ -44,7 +44,7 @@ classifier using grid of their values. All these steps (training of classifier) 
 
 Currently, amplitudes of injected pulses in training phase are set by hand. It will be fixed soon by analyzing amplitudes of `noise` pulses in apriori pulse-free small chunk of data.
 
-Script will create ``png`` plots of found candidates in original dynamical spectra & ``t-DM`` plane in ``frb/examples`` directory and dump data on found candidates and data searched in ``frb/frb/frb.db`` ``SQLite`` database.  It can be easily viewed in ``Firefox`` with ``SQLite Manager`` addon.
+Script will create ``png`` plots of found candidates in original dynamical spectra & ``t-DM`` plane in ``frb/examples`` directory and dump data on found candidates and data searched in ``frb/frb/frb.db`` ``SQLite`` database.  It can be easily viewed/queried in ``Firefox`` with ``SQLite Manager`` addon.
 
 ## Process experiment
 - Login to ``frb`` computer with your credientials
