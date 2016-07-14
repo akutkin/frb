@@ -123,7 +123,8 @@ class Searcher(object):
             List of ``Candidate`` instances.
         """
         kwargs.update({'t_0': self.dsp.t_0,
-                       'd_t': self.dsp.d_t})
+                       'd_t': self.dsp.d_t,
+                       'original_dsp': self.dsp.values})
         candidates = search_func(self._pre_processed_data.copy(), *args,
                                  **kwargs)
 
