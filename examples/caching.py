@@ -9,7 +9,7 @@ from frb.dyn_spectra import create_from_txt
 from frb.search_candidates import Searcher
 from frb.dedispersion import noncoherent_dedisperse
 from frb.search import (search_candidates_ell, search_candidates_clf,
-                        create_ellipses)
+                        search_candidates_shear, create_ellipses)
 from frb.ml import PulseClassifier
 
 # TODO: Automatically find amplitudes of injected pulses used in training of
@@ -56,24 +56,6 @@ dm_grid = np.arange(0., 1000., d_dm)
 # Initialize searcher class
 searcher = Searcher(dsp)
 
-# # Run search for FRB with some parameters of de-dispersion, pre-processing,
-# # searching algorithms
-# print "using ``search_candidates`` search function..."
-# candidates = searcher.run(de_disp_func=noncoherent_dedisperse,
-#                           search_func=search_candidates,
-#                           preprocess_func=create_ellipses,
-#                           de_disp_args=[dm_grid],
-#                           de_disp_kwargs={'threads': 4},
-#                           search_kwargs={'n_d_x': 4., 'n_d_y': 15.,
-#                                          'd_dm': d_dm},
-#                           preprocess_kwargs={'disk_size': 3,
-#                                              'threshold_big_perc': 97.5,
-#                                              'threshold_perc': 98.5,
-#                                              'statistic': 'mean'})
-# print "Found {} candidates".format(len(candidates))
-# for candidate in candidates:
-#     print candidate
-#
 # Run search for FRB with same parameters of de-dispersion, but different
 # pre-processing & searching algorithms
 print "using ``search_candidates_ell`` search function..."
@@ -92,6 +74,21 @@ candidates = searcher.run(de_disp_func=noncoherent_dedisperse,
                                              'threshold_big_perc': 97.5,
                                              'threshold_perc': 95.5,
                                              'statistic': 'mean'},
+                          db_file=db_file)
+print "Found {} candidates".format(len(candidates))
+for candidate in candidates:
+    print candidate
+
+
+print "using ``search_candidates_shear`` search function..."
+candidates = searcher.run(de_disp_func=noncoherent_dedisperse,
+                          search_func=search_candidates_shear,
+                          preprocess_func=None,
+                          de_disp_args=[dm_grid],
+                          de_disp_kwargs={'threads': 4},
+                          search_kwargs={'mph': 3.5, 'mpd': 50,
+                                         'shear': 0.4,
+                                         'd_dm': d_dm},
                           db_file=db_file)
 print "Found {} candidates".format(len(candidates))
 for candidate in candidates:
