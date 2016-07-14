@@ -65,7 +65,8 @@ def max_pos(object, image):
 
 
 # TODO: All search functions must returns instances of ``Candidate`` class
-def search_candidates_clf(image, pclf, t_0, d_t, d_dm, save_fig=False):
+def search_candidates_clf(image, pclf, t_0, d_t, d_dm, save_fig=False,
+                          original_dsp=None):
     """
     Search FRB in de-dispersed and pre-processed dynamical spectra using
     instance of trained ``PulseClassifier`` instance.
@@ -94,6 +95,14 @@ def search_candidates_clf(image, pclf, t_0, d_t, d_dm, save_fig=False):
                               save_file="search_clf_{}.png".format(i))
         except NoIntensityRegionException:
             continue
+
+
+        if original_dsp is not None:
+            plot_prop_original_dsp(prop, original_dsp=original_dsp,
+                                    show=False, close=True,
+                                    save_file="search_clf_dsp_{}.png".format(i))
+
+
         max_pos = (gg.x_mean + prop.bbox[0], gg.y_mean + prop.bbox[1])
         candidate = Candidate(t_0 + max_pos[1] * TimeDelta(d_t, format='sec'),
                               max_pos[0] * float(d_dm))
@@ -149,7 +158,8 @@ def search_candidates(image, n_d_x, n_d_y, t_0, d_t, d_dm):
 
 def search_candidates_ell(image, x_stddev, x_cos_theta,
                           y_to_x_stddev, theta_lims, t_0, d_t, d_dm,
-                          save_fig=False, amplitude=None):
+                          save_fig=False, amplitude=None,
+                          original_dsp=None):
     a = image.copy()
     s = generate_binary_structure(2, 2)
     # Label image
@@ -168,6 +178,27 @@ def search_candidates_ell(image, x_stddev, x_cos_theta,
                 continue
         amplitude = find_clusters_ell_amplitudes(amplitudes)
 
+
+    print "amplitude threshold {}".format(amplitude)
+    print "log amplitude threshold {}".format(np.log(amplitude))
+    fig, ax = matplotlib.pyplot.subplots(1, 1)
+    ax.hist(amplitudes, bins=300)
+    ax.axvline(amplitude)
+    ax.set_xlabel('Gaussian amplitude')
+    ax.set_ylabel('N')
+    fig.savefig('amps_hist.png', bbox_inches='tight', dpi=200)
+    fig.show()
+    matplotlib.pyplot.close()
+    fig, ax = matplotlib.pyplot.subplots(1, 1)
+    ax.hist(np.log(amplitudes), bins=300)
+    ax.axvline(np.log(amplitude))
+    ax.set_xlabel('Gaussian amplitude, log')
+    ax.set_ylabel('N')
+    fig.savefig('amps_hist_log.png', bbox_inches='tight', dpi=200)
+    fig.show()
+    matplotlib.pyplot.close()
+
+
     for i, prop in enumerate(props):
         try:
             gg = fit_elliplse(prop, plot=False)
@@ -180,6 +211,10 @@ def search_candidates_ell(image, x_stddev, x_cos_theta,
                 (theta_lims[0] < np.rad2deg(gg.theta) % 180 < theta_lims[1])):
             gg = fit_elliplse(prop, plot=save_fig, show=False, close=True,
                               save_file="search_ell_{}.png".format(i))
+            if original_dsp is not None:
+                plot_prop_original_dsp(prop, original_dsp=original_dsp,
+                                       show=False, close=True,
+                                       save_file="search_ell_dsp_{}.png".format(i))
             max_pos = (gg.x_mean + prop.bbox[0], gg.y_mean + prop.bbox[1])
             candidate = Candidate(t_0 + max_pos[1] * TimeDelta(d_t,
                                                                format='sec'),
@@ -187,6 +222,32 @@ def search_candidates_ell(image, x_stddev, x_cos_theta,
             candidates.append(candidate)
 
     return candidates
+
+
+def search_candidates_conv(image, original_dsp=None):
+    pass
+
+
+def plot_prop_original_dsp(prop, original_dsp=None, colorbar_label=None,
+                           close=False, save_file=None, show=True):
+    fig, ax = matplotlib.pyplot.subplots(1, 1)
+    ax.hold(True)
+    data = original_dsp[prop.bbox[0]: prop.bbox[2], prop.bbox[1]: prop.bbox[3]]
+    im = ax.matshow(data, cmap=matplotlib.pyplot.cm.jet)
+    ax.set_xlabel('Time step')
+    ax.set_ylabel('Frequency channel')
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="10%", pad=0.00)
+    cb = fig.colorbar(im, cax=cax)
+    if colorbar_label is not None:
+        cb.set_label(colorbar_label)
+    if save_file is not None:
+        fig.savefig(save_file, bbox_inches='tight', dpi=200)
+    if show:
+        fig.show()
+    if close:
+        matplotlib.pyplot.close()
 
 
 # FIXME: Add features
@@ -213,6 +274,8 @@ def get_ellipse_features_for_classification(image):
         except NoIntensityRegionException:
             continue
         # TODO: Subclass Exception for this case
+        # TODO: Add std of image area in pre_processed image. Noisy props will
+        # have higher std?
         features[prop] = [prop.area, gg.amplitude.value, abs(gg.x_stddev.value),
                           abs(gg.y_stddev.value), abs(gg.theta.value),
                           abs(gg.x_stddev.value/gg.y_stddev.value),
