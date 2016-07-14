@@ -243,7 +243,7 @@ def search_candidates_shear(image, t_0, d_t, d_dm, mph=3.5, mpd=50,
         candidate = Candidate(t_0 + t_indx * TimeDelta(d_t, format='sec'),
                               dm_indx * float(d_dm))
         candidates.append(candidate)
-        if original_dsp:
+        if original_dsp is not None:
             plot_rect_original_dsp(dm_indx, 10, t_indx, 50,
                                    original_dsp=original_dsp, show=False,
                                    close=True,
