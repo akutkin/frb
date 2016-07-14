@@ -2,12 +2,16 @@
 import numpy as np
 from scipy.ndimage.measurements import maximum_position, label, find_objects
 from scipy.ndimage.morphology import generate_binary_structure
+from scipy.signal import medfilt
 from skimage.measure import regionprops
 from skimage.morphology import opening
+from skimage.transform import warp, AffineTransform
 from candidates import Candidate
 from utils import find_clusters_ell_amplitudes
+from detect_peaks import detect_peaks
 from astropy.time import TimeDelta
 from astropy.modeling import models, fitting
+from astropy.stats import mad_std
 import matplotlib
 matplotlib.use('Agg')
 
@@ -178,7 +182,6 @@ def search_candidates_ell(image, x_stddev, x_cos_theta,
                 continue
         amplitude = find_clusters_ell_amplitudes(amplitudes)
 
-
     print "amplitude threshold {}".format(amplitude)
     print "log amplitude threshold {}".format(np.log(amplitude))
     fig, ax = matplotlib.pyplot.subplots(1, 1)
@@ -197,7 +200,6 @@ def search_candidates_ell(image, x_stddev, x_cos_theta,
     fig.savefig('amps_hist_log.png', bbox_inches='tight', dpi=200)
     fig.show()
     matplotlib.pyplot.close()
-
 
     for i, prop in enumerate(props):
         try:
@@ -224,8 +226,30 @@ def search_candidates_ell(image, x_stddev, x_cos_theta,
     return candidates
 
 
-def search_candidates_conv(image, original_dsp=None):
-    pass
+def search_candidates_shear(image, t_0, d_t, d_dm, mph=3.5, mpd=50,
+                            original_dsp=None, shear=0.4):
+    tform = AffineTransform(shear=shear)
+    warped_image = warp(image, tform)
+    warped = np.sum(warped_image, axis=0)
+    smoothed = medfilt(warped, 101)
+    warped = medfilt(warped, 5)
+    warped = (warped - smoothed) / mad_std(warped)
+    indxs = detect_peaks(warped, mph=mph, mpd=mpd)
+    dm_indxs = list()
+    for indx in indxs:
+        dm_indxs.append(np.argmax(warped_image[:, indx]))
+    candidates = list()
+    for i, (t_indx, dm_indx) in enumerate(zip(indxs, dm_indxs)):
+        candidate = Candidate(t_0 + t_indx * TimeDelta(d_t, format='sec'),
+                              dm_indx * float(d_dm))
+        candidates.append(candidate)
+        if original_dsp:
+            plot_rect_original_dsp(dm_indx, 10, t_indx, 50,
+                                   original_dsp=original_dsp, show=False,
+                                   close=True,
+                                   save_file="search_shear_dsp_{}.png".format(i))
+
+    return candidates
 
 
 def plot_prop_original_dsp(prop, original_dsp=None, colorbar_label=None,
@@ -233,6 +257,28 @@ def plot_prop_original_dsp(prop, original_dsp=None, colorbar_label=None,
     fig, ax = matplotlib.pyplot.subplots(1, 1)
     ax.hold(True)
     data = original_dsp[prop.bbox[0]: prop.bbox[2], prop.bbox[1]: prop.bbox[3]]
+    im = ax.matshow(data, cmap=matplotlib.pyplot.cm.jet)
+    ax.set_xlabel('Time step')
+    ax.set_ylabel('Frequency channel')
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="10%", pad=0.00)
+    cb = fig.colorbar(im, cax=cax)
+    if colorbar_label is not None:
+        cb.set_label(colorbar_label)
+    if save_file is not None:
+        fig.savefig(save_file, bbox_inches='tight', dpi=200)
+    if show:
+        fig.show()
+    if close:
+        matplotlib.pyplot.close()
+
+
+def plot_rect_original_dsp(x, dx, y, dy, original_dsp=None, colorbar_label=None,
+                           close=False, save_file=None, show=True):
+    fig, ax = matplotlib.pyplot.subplots(1, 1)
+    ax.hold(True)
+    data = original_dsp[x - dx/2: x + dx/2, y - dy/2: y + dy/2]
     im = ax.matshow(data, cmap=matplotlib.pyplot.cm.jet)
     ax.set_xlabel('Time step')
     ax.set_ylabel('Frequency channel')
