@@ -244,7 +244,7 @@ def search_candidates_shear(image, t_0, d_t, d_dm, mph=3.5, mpd=50,
                               dm_indx * float(d_dm))
         candidates.append(candidate)
         if original_dsp is not None:
-            plot_rect_original_dsp(dm_indx, 10, t_indx, 50,
+            plot_rect_original_dsp(t_indx, 50,
                                    original_dsp=original_dsp, show=False,
                                    close=True,
                                    save_file="search_shear_dsp_{}.png".format(i))
@@ -274,11 +274,11 @@ def plot_prop_original_dsp(prop, original_dsp=None, colorbar_label=None,
         matplotlib.pyplot.close()
 
 
-def plot_rect_original_dsp(x, dx, y, dy, original_dsp=None, colorbar_label=None,
+def plot_rect_original_dsp(y, dy, original_dsp=None, colorbar_label=None,
                            close=False, save_file=None, show=True):
     fig, ax = matplotlib.pyplot.subplots(1, 1)
     ax.hold(True)
-    data = original_dsp[x - dx/2: x + dx/2, y - dy/2: y + dy/2]
+    data = original_dsp[: , y - dy/2: y + dy/2]
     im = ax.matshow(data, cmap=matplotlib.pyplot.cm.jet)
     ax.set_xlabel('Time step')
     ax.set_ylabel('Frequency channel')
