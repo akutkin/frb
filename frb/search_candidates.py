@@ -81,10 +81,16 @@ class Searcher(object):
         self._de_disp_m = m.copy()
 
     def reset_pre_processing(self):
+        print "Resetting pre-processed data..."
         self._pre_processed_data = None
+        print "Cleaning pre-processing cache..."
+        os.unlink(self._pre_proces_cache_fname)
 
     def reset_dedispersion(self):
+        print "Resetting de-dispersed data..."
         self._de_dispersed_data = None
+        print "Cleaning de-dispersed cache..."
+        os.unlink(self._de_disp_cache_fname)
 
     def pre_process(self, preprocess_func, *args, **kwargs):
         # Will only search for cached values with the same de-dispersion & pre-
