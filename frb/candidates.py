@@ -88,8 +88,7 @@ db_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),
 engine = create_engine("sqlite:///{}".format(db_file))
 
 # This creates tables
-metadata = Base.metadata
-metadata.create_all(engine)
+Base.metadata.create_all(engine, checkfirst=True)
 
 Session = sessionmaker(bind=engine)
 session = Session()
