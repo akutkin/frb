@@ -112,6 +112,8 @@ class PulseClassifier(object):
                     dsp.rm_pulse(*pars)
 
         # Again find props now without pulses that can't be found
+        searcher.reset_dedispersion()
+        searcher.reset_pre_processing()
         searcher = Searcher(dsp)
         searcher.de_disperse(self.de_disp_func, *self.de_disp_args,
                              **self.de_disp_kwargs)
@@ -153,6 +155,9 @@ class PulseClassifier(object):
                                 " pulse with t0={:.3f},"
                                 " DM={:.0f}".format(t0_, dm_))
             trues.append(sorted(true_, key=lambda x: x.area, reverse=True)[0])
+
+        searcher.reset_dedispersion()
+        searcher.reset_pre_processing()
 
         # Create arrays with features
         props_responses = dict()
