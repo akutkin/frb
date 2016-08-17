@@ -100,12 +100,10 @@ def search_candidates_clf(image, pclf, t_0, d_t, d_dm, save_fig=False,
         except NoIntensityRegionException:
             continue
 
-
         if original_dsp is not None:
             plot_prop_original_dsp(prop, original_dsp=original_dsp,
                                     show=False, close=True,
                                     save_file="search_clf_dsp_{}.png".format(i))
-
 
         max_pos = (gg.x_mean + prop.bbox[0], gg.y_mean + prop.bbox[1])
         candidate = Candidate(t_0 + max_pos[1] * TimeDelta(d_t, format='sec'),
@@ -340,6 +338,7 @@ def get_ellipse_features_for_classification(image):
     return features
 
 
+# TODO: automatic choose of ``threshold_`` to get enough props.
 # FIXME: ``skimage.filters.median`` use float images with ranges ``[-1, 1]``. I
 # can scale original, use ``median`` and then scale back - it is much faster
 # then mine
